@@ -47,7 +47,7 @@ const corDoTexto = (p: number) => (p >= 80 ? "text-sucesso" : p >= 50 ? "text-de
 
 export function DominioPorCategoria({ linhas }: { linhas: Dominio[] }) {
   return (
-    <section aria-label="Domínio por categoria" className="rounded border border-borda bg-painel p-8">
+    <section aria-label="Domínio por categoria" className="flex flex-col justify-center rounded border border-borda bg-painel p-8">
       <h2 className="text-xs font-semibold tracking-wider text-texto-secundario">DOMÍNIO POR CATEGORIA DE DEFEITO</h2>
       <p className="mt-2 text-sm text-texto-secundario">PDR médio das suas tentativas encerradas, em percentual da base do nível.</p>
       <ul className="mt-6 flex flex-col gap-4">
