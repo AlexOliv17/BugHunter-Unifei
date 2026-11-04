@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { destinoSeguro, ehDeAcesso, ehProtegida } from "../rotas";
 
 describe("rotas protegidas (RF-02)", () => {
-  it("temas e exercícios exigem login", () => {
-    for (const c of ["/temas", "/temas/fundamentos", "/exercicio", "/exercicio/abc"]) expect(ehProtegida(c)).toBe(true);
+  it("temas, exercícios e perfil exigem login", () => {
+    for (const c of ["/temas", "/temas/fundamentos", "/exercicio", "/exercicio/abc", "/perfil"]) expect(ehProtegida(c)).toBe(true);
   });
   it("login, cadastro e outras rotas não são protegidas", () => {
     for (const c of ["/login", "/cadastro", "/", "/temasx", "/api/saude"]) expect(ehProtegida(c)).toBe(false);

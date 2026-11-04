@@ -88,6 +88,7 @@ Espelha `auth.users`, gerenciada pelo Supabase Auth, acrescentando o nome de exi
 | `id` | uuid PK | não | mesmo identificador de `auth.users.id` |
 | `email` | text | não | único; usado para login |
 | `nome` | text | não | nome de exibição; cabeçalho e feedback |
+| `exibir_nome` | boolean | não | padrão `false`; se o aluno aparece com o nome no ranking ou como "Aluno anônimo" (D-36) |
 | `criado_em` | timestamptz | não | padrão `now()`; auditoria |
 
 **Criação da linha.** Um gatilho em `auth.users` (`usuarios_no_cadastro`) insere a linha na mesma transação em que o Supabase Auth cria a conta, com o mesmo `id` e o nome enviado nos metadados do cadastro. Sem nome, o cadastro é recusado, inclusive quando feito direto pela API do Auth (RF-01, S2-03).
@@ -407,6 +408,17 @@ language sql stable security definer set search_path = public as $$
 $$;
 ```
 
+Quatro funções do mesmo tipo atendem o perfil e o ranking (RF-18 a RF-20, migration 017). Todas usam `auth.uid()`, só olham tentativas encerradas e devolvem agregados:
+
+| FUNÇÃO | DEVOLVE |
+|---|---|
+| `elo_do_aluno()` | o elo do aluno da sessão (RN-13) e quantas tentativas entraram na média |
+| `dominio_por_categoria()` | por categoria da v1: nome, nível, tentativas e o PDR médio em percentual da base (RN-13); só do aluno da sessão |
+| `ranking_semanal()` | posição, nome exibido, pontos da semana e se a linha é do aluno da sessão (RN-14) |
+| `ranking_geral()` | o mesmo, pelo elo (RN-14) |
+
+O ranking é a única leitura que envolve outros alunos, e por isso devolve só **posição, nome exibido e pontos**: o nome exibido já sai pronto do banco ("Marina F." ou "Aluno anônimo", conforme `exibir_nome`), e nenhum id, e-mail, tentativa ou evento de outro aluno atravessa a função (RNF-04).
+
 **O código do exercício não é legível pelo cliente.** Ele chega exclusivamente pela resposta de `POST /api/tentativa`, que devolve apenas o exercício da tentativa aberta daquele aluno: `codigo_com_defeito`, `assinatura`, `descricao`, `teste_exemplo` e `nivel`. Não existe view de exercícios (D-20). Com os `codigo_com_defeito` de todos os exercícios em mãos, agrupar os irmãos de um mesmo programa-base e votar linha a linha reconstruiria o `codigo_correto` e revelaria a `linha_defeito` de cada um.
 
 `nivel` pode ser exposto porque o aluno escolheu o nível e precisa ver a pontuação-base. Os nomes das categorias de um nível também podem (RF-04); o que não pode é ligar categoria a exercício, porque revelaria a natureza do defeito.
@@ -437,7 +449,7 @@ grant execute on function progresso_por_tema(), niveis_do_tema(text)
 -- do Supabase (insert, delete, e tudo para anon)
 revoke all on usuarios from anon, authenticated;
 grant select on usuarios to authenticated;
-grant update (nome) on usuarios to authenticated;   -- só o nome é editável (D-24)
+grant update (nome, exibir_nome) on usuarios to authenticated;   -- só o nome e a escolha do ranking (D-24, D-36)
 ```
 
 `dicas` não tem grant algum para o cliente. O texto chega exclusivamente por `POST /api/dica`, que confere a condição de liberação de RN-04 antes de responder. Sem isso, o aluno leria os três textos de uma vez e o custo em pontos seria decorativo.
@@ -532,7 +544,8 @@ select coalesce(max(numero_tentativa), 0) + 1
 from tentativas
 where usuario_id = $1 and exercicio_id = $2;
 
--- desempenho por categoria, base do perfil quando ele entrar (fora da v1)
+-- desempenho por categoria: rascunho original; o perfil usa dominio_por_categoria(),
+-- que mede o PDR médio em percentual da base e tira os treinos (RN-13)
 select c.nome,
        count(*) filter (where t.desfecho = 'resolvido') as resolvidos,
        round(avg(t.pdr_final)) as pdr_medio
@@ -550,10 +563,6 @@ O `order by (r.ok is not null), e.ordem` do passo 2 implementa RN-09 por inteiro
 
 | ITEM FUTURO | O QUE JÁ ESTÁ PRONTO | O QUE FALTA |
 |---|---|---|
-| Elo e janela móvel | `pdr_final` por tentativa, ordenável por `fechada_em` | consulta de média sobre as 20 últimas |
-| Ranking semanal | `fechada_em` indexado | agregação com recorte de data |
-| Ranking geral | idem | depende do elo |
-| Perfil por categoria | consulta da seção 6 pronta | tela |
 | Nível Alto | `nivel` é CHECK com dois valores | acrescentar `alto` ao CHECK e as categorias |
 | Novos temas | `temas` e `programas_base.tema_codigo` existem | escrever os programas-base e marcar `ativo` |
 | Dicas sob medida | `dicas` como tabela, servida por endpoint | geração dinâmica coexistindo com o texto fixo |

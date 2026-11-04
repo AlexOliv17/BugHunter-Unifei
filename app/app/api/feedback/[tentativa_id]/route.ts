@@ -13,6 +13,7 @@ import { reconstruirEstado } from "@/lib/estado";
 import { codigoSubmetido, linhaDoTempo } from "@/lib/feedback";
 import { BASE_POR_NIVEL, ehNivel } from "@/lib/niveis";
 import { usuarioAtual } from "@/lib/sessao";
+import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { criarClienteServico } from "@/lib/supabase/servico";
 
 export const maxDuration = 30;
@@ -32,8 +33,14 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/feedback/[t
   if ("erro" in p) return p.erro;
   const lido = await lerEncerramento(p.banco, p.usuario.id, p.tentativaId);
   if ("erro" in lido) return erroDoBanco(lido.erro, falha);
-  const eventos = await lerEventos(p.banco, p.tentativaId);
+  // o elo antes e depois desta tentativa (RF-19) usa a sessão do aluno: auth.uid()
+  const sessao = await criarClienteServidor();
+  const [eventos, elo] = await Promise.all([
+    lerEventos(p.banco, p.tentativaId),
+    sessao.rpc("elo_em_torno", { p_tentativa: p.tentativaId }),
+  ]);
   if (!eventos) return respostaErro(500, falha);
+  const emTorno = (elo.data as { antes: number | null; depois: number | null }[] | null)?.[0] ?? null;
 
   const d = lido.dados;
   const nivel = ehNivel(d.nivel) ? d.nivel : "baixo";
@@ -47,6 +54,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/api/feedback/[t
     codigo_com_defeito: d.codigo_com_defeito,
     codigo_submetido: codigoSubmetido(eventos, d),
     feedback: d.feedback_texto,
+    elo: emTorno,
   }, { headers: { "cache-control": "no-store" } });
 }
 

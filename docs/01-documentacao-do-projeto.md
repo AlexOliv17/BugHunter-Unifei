@@ -101,8 +101,8 @@ Se travar, pode pedir até três dicas, cada uma revelando mais e custando mais 
 | Exercícios gerados | 15 a 25 | — |
 | Dicas | 12 textos fixos, escritos à mão | dicas geradas sob medida |
 | Uso de IA | feedback final apenas | — |
-| Pontuação | PDR por exercício e acumulado | elo, janela móvel, rankings |
-| Perfil e ranking | fora | telas já desenhadas, entram depois |
+| Pontuação | PDR por exercício e acumulado, elo e rankings semanal e geral (D-33, D-35) | — |
+| Perfil e ranking | domínio por categoria, elo, faixa e ranking (D-32 a D-37) | resumo numérico, ponto fraco e seleção adaptativa, dias seguidos |
 | Experimentos de pesquisa | fora | — |
 
 ### 3.2 Catálogo de categorias de defeito
@@ -342,6 +342,34 @@ Se o aluno fecha a página no meio de uma tentativa, ela permanece com desfecho 
 
 O evento `editou` é gravado sempre que o aluno aciona Precheck, Verificar ou Encerrar, com o conteúdo atual do editor. Isso garante que sempre exista um código submetido para o feedback final, mesmo quando o aluno edita e desiste sem testar.
 
+### RN-13 · Elo e faixas
+
+O elo resume o desempenho recente do aluno (D-33): a média do `pdr_final` das 20 últimas tentativas encerradas, por `fechada_em`, sem as tentativas de treino (D-31). Desistências entram com 0. Com menos de 20 tentativas, vale a média das que houver; sem nenhuma, o aluno não tem elo. O resultado é arredondado meio-para-cima, como o PDR (D-16).
+
+Como o PDR máximo é 200 (nível médio), o elo vai de 0 a 200. As faixas (D-34):
+
+| FAIXA | ELO | I | II | III |
+|---|---|---|---|---|
+| Bronze | 0–49 | 0–16 | 17–33 | 34–49 |
+| Prata | 50–99 | 50–66 | 67–83 | 84–99 |
+| Ouro | 100–149 | 100–116 | 117–133 | 134–149 |
+| Diamante | 150–200 | 150–166 | 167–183 | 184–200 |
+
+A divisão sobe de I para III: Ouro III é a parte mais alta do Ouro, e depois dela vem Diamante I.
+
+**Domínio por categoria.** No perfil, cada categoria mostra o PDR médio das tentativas encerradas daquela categoria, em percentual da base do nível, sem os treinos e com as desistências valendo 0 (D-32). Só entram tentativas encerradas, porque a categoria de um exercício só é revelada no encerramento (RNF-03).
+
+### RN-14 · Ranking
+
+Dois rankings, com todos os alunos, porque a v1 não tem turmas (D-35):
+
+- **semanal:** soma do `pdr_final` das tentativas encerradas desde segunda-feira às 0h, horário de Brasília; só entra quem encerrou alguma tentativa na semana;
+- **geral:** pelo elo; só entra quem tem elo.
+
+Pontuações iguais ocupam a mesma posição, em ordem alfabética do nome exibido. O perfil mostra um resumo — os 3 primeiros, o próprio aluno e um vizinho acima e outro abaixo — e o aluno pode abrir o ranking completo (D-37).
+
+Cada aluno escolhe, no perfil, se aparece com o nome ("Marina F.": primeiro nome e inicial do último) ou como "Aluno anônimo". O padrão é anônimo, para ninguém aparecer com o nome sem ter escolhido (D-36). O próprio aluno sempre vê a sua posição destacada.
+
 ## 6. Pipeline de geração de exercícios
 
 Roda na máquina do aluno, em Python, na pasta `/pipeline`. Não é publicado.
@@ -495,8 +523,7 @@ Se a chamada falhar ou exceder 15 segundos, o sistema exibe um feedback de reser
 | 5 | Exercício — editor liberado | edição e testes | sim |
 | 6 | Exercício — resultado do precheck | retorno do teste de exemplo | sim |
 | 7 | Feedback final | encerramento da tentativa | sim |
-| 8 | Progresso por categoria | desempenho do aluno | não |
-| 9 | Ranking semanal e elo | comparação entre alunos | não |
+| 8 | Perfil ("Meu progresso") | domínio por categoria, elo e faixa, ranking semanal e geral | sim |
 
 As telas 4, 5 e 6 são a mesma rota em estados diferentes, não três páginas distintas.
 
@@ -529,7 +556,7 @@ Pontos que não haviam sido discutidos e foram resolvidos aqui. Merecem validaç
 | D-21 | Versionamento dos exercícios | coluna `ativo` com índice único parcial sobre `ordem`, substituindo a unicidade global. Versões antigas são desativadas, não apagadas, preservando as tentativas históricas | `ordem` única para sempre, que colide quando `mutador_versao` muda |
 | D-22 | Onde vive o conteúdo dos exercícios | repositório privado `BugHunter-Data`, separado do repositório público de código e lido só pelo pipeline. O histórico do git é permanente: conteúdo publicado uma vez não se desfaz movendo-o depois | conteúdo no repositório público, movido para um privado ao fim da implementação |
 | D-23 | Imutabilidade dos eventos | garantida também no banco: um gatilho recusa `update`, `delete` e `truncate` em `eventos` para qualquer papel, inclusive o servidor com a chave de serviço | garantir apenas pela ausência de grant ao cliente, deixando o servidor livre para alterar o histórico |
-| D-24 | Edição do perfil pelo aluno | só o `nome`; o e-mail vem do login e não é editável pelo cliente na v1 | editar o e-mail em `usuarios` e sincronizá-lo com o login |
+| D-24 | Edição do perfil pelo aluno | só o `nome` e, a partir da D-36, a escolha de aparecer com o nome no ranking; o e-mail vem do login e não é editável pelo cliente na v1 | editar o e-mail em `usuarios` e sincronizá-lo com o login |
 | D-25 | Ordem dos temas na tela | coluna `ordem` em `temas`, definida pelo autor do conteúdo: fundamentos, poo, ed1, ed2 | ativos primeiro e depois ordem alfabética, sem controle do autor |
 | D-26 | Formato da suíte oculta | lista de casos `{entrada, esperado}` em JSON; o processo do aluno recebe só as entradas e a comparação ocorre no servidor | código de teste, que levaria entradas e respostas juntas ao processo do aluno |
 | D-27 | Comparação de números decimais | tolerância relativa de 10⁻⁹, elemento a elemento em listas; demais tipos com igualdade exata | igualdade exata, que reprova correções certas escritas de outro jeito |
@@ -537,8 +564,14 @@ Pontos que não haviam sido discutidos e foram resolvidos aqui. Merecem validaç
 | D-29 | "Próximo exercício" na tela final | outro exercício do mesmo tema e nível: a RN-09 aplicada excluindo o exercício recém-encerrado (tentativa aberta de outro exercício do nível; senão o não resolvido de menor `ordem`; senão o de menor `ordem`, valendo metade). Se o nível só tiver aquele exercício, ele é reaberto | voltar à escolha de nível, ou aplicar a RN-09 sem exclusão, que reabriria o mesmo exercício depois de uma desistência |
 | D-30 | Navegação entre telas | botão Voltar em todas as telas logadas exceto Temas, para a tela anterior na hierarquia: nível → Temas; exercício → nível; resultado → nível (o exercício encerrado redirecionaria ao resultado). A marca BugHunter no cabeçalho leva sempre a Temas | depender do botão voltar do navegador |
 | D-31 | Pontuação de quem refaz um exercício já resolvido | a nota do exercício é a da primeira tentativa resolvida: depois dela, refazer é treino e fecha com `pdr_final = 0`. Antes de resolver, a repetição vale 0,5 (RN-07). O botão de refazer continua disponível e diz qual dos dois casos se aplica | cada repetição somar mais 50% do PDR, o que permitiria acumular pontos refazendo o mesmo exercício |
+| D-32 | Conteúdo do perfil | domínio por categoria pelo PDR médio, em percentual da base, só com tentativas encerradas e sem treinos; mais elo, faixa e ranking | o perfil completo do protótipo, com resumo numérico, ponto fraco e dias seguidos |
+| D-33 | Cálculo do elo | média do `pdr_final` das 20 últimas tentativas encerradas, sem treinos, com desistências valendo 0, arredondada meio-para-cima (RN-13) | incluir os treinos, que fariam refazer um exercício derrubar o elo; ou só resolvidas, que esconderiam as desistências |
+| D-34 | Faixas do elo | Bronze, Prata, Ouro e Diamante em blocos de 50 pontos, cada um em I, II e III, subindo de I para III (RN-13) | as faixas do protótipo, ajustadas a um elo de exemplo |
+| D-35 | Rankings | semanal (soma do PDR desde segunda 0h, Brasília) e geral (pelo elo), com todos os alunos, porque não há turmas na v1 (RN-14) | só um dos dois |
+| D-36 | Como os alunos aparecem no ranking | cada aluno escolhe: "Nome S." ou "Aluno anônimo", com anônimo como padrão | mostrar sempre o nome, sem a escolha do aluno |
+| D-37 | Tamanho do ranking | resumo no perfil (3 primeiros, o aluno e os vizinhos) e o ranking completo sob demanda | só os vizinhos, sem acesso às outras posições |
 
-D-12 foi revista e D-16 a D-28 foram acrescentadas pelo P.O. na revisão da especificação da versão 1.2. D-29 a D-31 foram decididas pelo P.O. na validação da sprint 5.
+D-12 foi revista e D-16 a D-28 foram acrescentadas pelo P.O. na revisão da especificação da versão 1.2. D-29 a D-31 foram decididas pelo P.O. na validação da sprint 5, e D-32 a D-37 no planejamento da sprint 7.
 
 ## 10. Riscos
 

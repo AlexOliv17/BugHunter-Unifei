@@ -23,10 +23,10 @@ const TABELAS_PERMITIDAS = {
   anon: {},
   authenticated: { temas_publicos: ["SELECT"], usuarios: ["SELECT"] },
 };
-const COLUNAS_EDITAVEIS = { anon: [], authenticated: ["usuarios.nome"] };
+const COLUNAS_EDITAVEIS = { anon: [], authenticated: ["usuarios.nome", "usuarios.exibir_nome"] };
 const FUNCOES_PERMITIDAS = {
   anon: [],
-  authenticated: ["niveis_do_tema(text)", "progresso_por_tema()"],
+  authenticated: ["dominio_por_categoria()", "elo_do_aluno()", "elo_em_torno(uuid)", "niveis_do_tema(text)", "progresso_por_tema()", "ranking_geral()", "ranking_semanal()"],
 };
 const PRIVILEGIOS = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"];
 
@@ -47,7 +47,7 @@ describe("privilégios dos papéis do cliente, pelo catálogo", () => {
     }
   });
 
-  test("colunas: os quatro segredos são ilegíveis, e só nome é editável", async () => {
+  test("colunas: os quatro segredos são ilegíveis; editáveis só nome e exibir_nome", async () => {
     const { rows } = await banco.admin.query(
       "select table_name, column_name from information_schema.columns where table_schema = 'public'");
     for (const papel of PAPEIS) {
@@ -59,7 +59,7 @@ describe("privilégios dos papéis do cliente, pelo catálogo", () => {
         if (SEGREDOS.includes(column_name)) assert.equal(col.rows[0].le, false, `${papel} lê ${table_name}.${column_name}`);
         if (col.rows[0].edita) editaveis.push(`${table_name}.${column_name}`);
       }
-      assert.deepEqual(editaveis, COLUNAS_EDITAVEIS[papel], `colunas editáveis por ${papel}`);
+      assert.deepEqual(editaveis.sort(), [...COLUNAS_EDITAVEIS[papel]].sort(), `colunas editáveis por ${papel}`);
     }
   });
 
