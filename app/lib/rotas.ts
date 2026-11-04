@@ -2,7 +2,7 @@
 
 export const DESTINO_APOS_ENTRAR = "/temas";
 
-const PROTEGIDAS = ["/temas", "/exercicio"];
+const PROTEGIDAS = ["/temas", "/exercicio", "/perfil"];
 const DE_ACESSO = ["/login", "/cadastro"];
 
 const casa = (caminho: string, prefixo: string) => caminho === prefixo || caminho.startsWith(prefixo + "/");
