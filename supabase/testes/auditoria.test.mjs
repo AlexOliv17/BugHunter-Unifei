@@ -26,7 +26,7 @@ const TABELAS_PERMITIDAS = {
 const COLUNAS_EDITAVEIS = { anon: [], authenticated: ["usuarios.nome", "usuarios.exibir_nome"] };
 const FUNCOES_PERMITIDAS = {
   anon: [],
-  authenticated: ["dominio_por_categoria()", "elo_do_aluno()", "niveis_do_tema(text)", "progresso_por_tema()", "ranking_geral()", "ranking_semanal()"],
+  authenticated: ["dominio_por_categoria()", "elo_do_aluno()", "elo_em_torno(uuid)", "niveis_do_tema(text)", "progresso_por_tema()", "ranking_geral()", "ranking_semanal()"],
 };
 const PRIVILEGIOS = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"];
 

@@ -142,6 +142,29 @@ describe("escolha de visibilidade (D-36)", () => {
   });
 });
 
+describe("elo antes e depois de uma tentativa (S7-06)", () => {
+  test("antes sem ela, depois com ela, no momento em que fechou", async () => {
+    const a = await aluno();
+    await encerrada(a, await exercicio(), { pdr: 100, quando: "now() - interval '3 hours'" });
+    await encerrada(a, await exercicio(), { pdr: 100, quando: "now() - interval '2 hours'" });
+    const ex = await exercicio();
+    await encerrada(a, ex, { pdr: 0, desfecho: "desistiu", quando: "now() - interval '1 hour'" });
+    await encerrada(a, await exercicio(), { pdr: 100 });   // depois: não entra no "depois" da anterior
+    const id = (await q("select id from tentativas where exercicio_id = $1", [ex])).rows[0].id;
+    // antes: (100 + 100) / 2 = 100; depois: (100 + 100 + 0) / 3 = 66,7 → 67
+    assert.deepEqual(await comoAluno(a, "select * from elo_em_torno($1)", [id]), [{ antes: 100, depois: 67 }]);
+  });
+  test("treino não mexe no elo; tentativa de outro aluno não devolve nada", async () => {
+    const a = await aluno(), b = await aluno();
+    const ex = await exercicio();
+    await encerrada(a, ex, { pdr: 80, quando: "now() - interval '1 hour'" });
+    await encerrada(a, ex, { pdr: 0, numero: 2 });   // treino
+    const treino = (await q("select id from tentativas where exercicio_id = $1 and numero_tentativa = 2", [ex])).rows[0].id;
+    assert.deepEqual(await comoAluno(a, "select * from elo_em_torno($1)", [treino]), [{ antes: 80, depois: 80 }]);
+    assert.deepEqual(await comoAluno(b, "select * from elo_em_torno($1)", [treino]), []);
+  });
+});
+
 test("o cliente não executa os auxiliares", async () => {
   const a = await aluno();
   for (const sql of ["select * from elo_de(gen_random_uuid())", "select * from tentativas_pontuaveis(gen_random_uuid())", "select nome_exibido('a', true)"]) {

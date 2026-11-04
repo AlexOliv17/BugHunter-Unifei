@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import type { EstadoTentativa } from "@/lib/estado";
+import { divisaoDoElo } from "@/lib/elo";
 import { secoesDoFeedback, type MarcoDaLinhaDoTempo } from "@/lib/feedback";
 import type { Nivel } from "@/lib/niveis";
 import { Voltar } from "../../../Voltar";
@@ -19,6 +20,7 @@ type Resultado = {
   exercicio: { assinatura: string; descricao: string; tema: string; nivel: Nivel; base: number };
   categoria: string; estado: EstadoTentativa; linha_do_tempo: MarcoDaLinhaDoTempo[];
   codigo_com_defeito: string; codigo_submetido: string; feedback: string | null;
+  elo: { antes: number | null; depois: number | null } | null;
 };
 type Gabarito = { codigo_correto: string; linha_defeito: number };
 
@@ -103,6 +105,7 @@ export function TelaResultado({ tentativaId }: { tentativaId: string }) {
         </div>
         <aside className="flex flex-col gap-6">
           <PainelPontuacao exercicio={dados.exercicio} estado={dados.estado} numeroTentativa={dados.numero_tentativa} treino={dados.treino} />
+          {dados.elo?.depois != null && <EloEmTorno antes={dados.elo.antes} depois={dados.elo.depois} treino={dados.treino} />}
           <LinhaDoTempo marcos={dados.linha_do_tempo} />
         </aside>
       </div>
@@ -200,6 +203,22 @@ function CodigosCompletos({ dados, gabarito }: { dados: Resultado; gabarito: Gab
         ))}
       </div>
     </details>
+  );
+}
+
+// RF-19: como esta tentativa mexeu no elo (o protótipo: "Elo, com este zero na janela 167 → 158")
+function EloEmTorno({ antes, depois, treino }: { antes: number | null; depois: number; treino: boolean }) {
+  const subiu = antes !== null && depois > antes, desceu = antes !== null && depois < antes;
+  const faixa = divisaoDoElo(depois).atual.rotulo;
+  return (
+    <Link href="/perfil" className={`flex items-center justify-between rounded border px-6 py-4 text-sm transition-colors hover:border-texto-apagado ${desceu ? "border-perigo/40 bg-perigo/5" : subiu ? "border-sucesso/40 bg-sucesso/5" : "border-borda bg-painel"}`}>
+      <span className="text-texto-secundario">{treino ? "Elo (treino não altera)" : antes === null ? "Seu primeiro elo" : "Elo, com esta tentativa"}</span>
+      <span className="font-mono">
+        {antes !== null && antes !== depois && <><span className="text-texto-secundario">{antes}</span> → </>}
+        <span className={desceu ? "font-semibold text-perigo" : subiu ? "font-semibold text-sucesso" : "font-semibold"}>{depois}</span>
+        <span className="ml-3 text-xs text-texto-apagado">{faixa}</span>
+      </span>
+    </Link>
   );
 }
 

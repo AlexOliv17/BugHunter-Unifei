@@ -21,7 +21,7 @@ const ESPERADO = {
   authenticated: {
     tabelas: { temas_publicos: ["SELECT"], usuarios: ["SELECT"] },
     editaveis: ["usuarios.exibir_nome", "usuarios.nome"],
-    funcoes: ["dominio_por_categoria()", "elo_do_aluno()", "niveis_do_tema(text)", "progresso_por_tema()", "ranking_geral()", "ranking_semanal()"],
+    funcoes: ["dominio_por_categoria()", "elo_do_aluno()", "elo_em_torno(uuid)", "niveis_do_tema(text)", "progresso_por_tema()", "ranking_geral()", "ranking_semanal()"],
   },
 };
 const SEGREDOS = ["suite_oculta", "codigo_correto", "linha_defeito", "categoria_codigo"];
@@ -59,7 +59,7 @@ const semRls = (await c.query(`select c.relname from pg_class c join pg_namespac
 linha(semRls.length === 0, `RLS ligado em usuarios, tentativas e eventos (sem RLS: ${JSON.stringify(semRls)})`);
 const funcoesServidor = (await c.query(`select p.proname, coalesce(p.proargnames, '{}') argumentos, p.proargtypes::regtype[]::text[] tipos
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and p.prorettype <> 'trigger'::regtype and p.proname not in ('niveis_do_tema', 'progresso_por_tema', 'elo_do_aluno', 'dominio_por_categoria', 'ranking_semanal', 'ranking_geral') order by 1`)).rows;
+  where n.nspname = 'public' and p.prorettype <> 'trigger'::regtype and p.proname not in ('niveis_do_tema', 'progresso_por_tema', 'elo_do_aluno', 'elo_em_torno', 'dominio_por_categoria', 'ranking_semanal', 'ranking_geral') order by 1`)).rows;
 await c.query("rollback");
 await c.end();
 
