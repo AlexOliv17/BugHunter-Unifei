@@ -32,7 +32,7 @@ for (const [metodo, rota] of rotas) {
 }
 
 console.log("\ntelas logadas, sem login:");
-for (const tela of ["/temas", "/temas/fundamentos", `/exercicio/${U}`, `/exercicio/${U}/resultado`]) {
+for (const tela of ["/temas", "/temas/fundamentos", `/exercicio/${U}`, `/exercicio/${U}/resultado`, "/perfil"]) {
   const r = await fetch(BASE + tela, { redirect: "manual" });
   const destino = r.headers.get("location") ?? "";
   linha([302, 303, 307, 308].includes(r.status) && destino.includes("/login"), `${tela}: HTTP ${r.status} → ${destino.replace(BASE, "")}`);

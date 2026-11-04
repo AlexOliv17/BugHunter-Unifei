@@ -90,5 +90,15 @@ for (const f of funcoesServidor) {
   linha(negado, `chamar ${f.proname}: HTTP ${r.status}${negado ? " (sem permissão)" : ""}`);
 }
 
+// as funções do aluno logado (perfil, elo, ranking) também não respondem sem login
+for (const f of ["elo_do_aluno", "dominio_por_categoria", "ranking_semanal", "ranking_geral", "progresso_por_tema"]) {
+  const r = await rest(`rpc/${f}`, { method: "POST", body: "{}" });
+  linha(r.status === 401 || /42501|permission denied/.test(r.corpo), `chamar ${f} sem login: HTTP ${r.status}`);
+}
+{
+  const r = await rest("rpc/elo_em_torno", { method: "POST", body: JSON.stringify({ p_tentativa: "00000000-0000-0000-0000-000000000000" }) });
+  linha(r.status === 401 || /42501|permission denied/.test(r.corpo), `chamar elo_em_torno sem login: HTTP ${r.status}`);
+}
+
 console.log(`\n${alertas} alerta(s)`);
 process.exit(alertas ? 1 : 0);
