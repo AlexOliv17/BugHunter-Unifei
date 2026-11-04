@@ -59,7 +59,7 @@ Confirmadas pelo P.O. em 2026-11-04, salvo os dois ajustes já incorporados (div
 | # | Atividade | Ref. | ◆ |
 |---|---|---|---|
 | S7-01 | Atualizar Requisitos, Documentação e Modelo de Dados com D-32 a D-37 e as regras confirmadas | — | ◆ |
-| S7-02 | Migration: `usuarios.exibir_nome`; funções `elo_do_aluno`, `dominio_por_categoria`, `ranking_semanal`, `ranking_geral` e `definir_visibilidade`, com testes no Postgres real (inclusive a recusa de dados de outro aluno) | RF-18 a RF-20 | |
+| S7-02 | Migration: `usuarios.exibir_nome`; funções `elo_do_aluno`, `dominio_por_categoria`, `ranking_semanal` e `ranking_geral`; a escolha de visibilidade é gravada pelo próprio aluno, com grant só na coluna `exibir_nome` (como o `nome`, D-24), com testes no Postgres real (inclusive a recusa de dados de outro aluno) | RF-18 a RF-20 | |
 | S7-03 | `lib/elo.ts`: elo e faixas como funções puras, com testes (fronteiras de cada divisão, menos de 20 tentativas, treinos fora) | RF-19 | |
 | S7-04 | Tela `/perfil` ("Meu progresso"): cabeçalho com faixa, elo e barra até a próxima divisão; domínio por categoria | RF-18 | |
 | S7-05 | Ranking na tela de perfil, com abas Semanal e Geral, o resumo e o ranking completo, e a opção "aparecer com meu nome" | RF-20 | |

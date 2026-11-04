@@ -241,6 +241,43 @@ Toda ação relevante deve gerar um registro imutável, gravado pelo servidor.
 - **Dado** o cliente tentando inserir, alterar ou apagar um evento diretamente no banco, **quando** a operação for submetida, **então** é negada.
 - **Dado** os eventos de uma tentativa lidos em ordem, **quando** forem processados, **então** permitem reconstruir integralmente o estado: localização feita e seu fator, edições, usos de precheck, verificações, dicas usadas e desfecho.
 
+### Perfil e ranking
+
+#### RF-18 · Perfil do aluno
+*Prioridade: Importante · Regras: RN-13 · Entidades: E-01, E-03, E-05, E-07*
+
+O sistema deve mostrar ao aluno o próprio desempenho por categoria de defeito, o elo e a faixa (D-32).
+
+- **Dado** um aluno autenticado, **quando** acionar as iniciais ou o selo da faixa no cabeçalho, **então** abre a tela de perfil com nome, faixa, elo e o quanto falta para a próxima divisão.
+- **Dado** tentativas encerradas, **quando** o perfil for exibido, **então** cada categoria de defeito da v1 mostra o PDR médio das tentativas daquela categoria, em percentual da base do nível; desistências entram com 0 e treinos (D-31) ficam de fora.
+- **Dado** uma categoria sem tentativas encerradas, **quando** o perfil for exibido, **então** ela aparece como "ainda sem tentativas", não como 0%.
+- **Dado** uma tentativa aberta, **quando** o perfil for calculado, **então** ela não entra, porque a categoria só é revelada no encerramento (RNF-03).
+- **Dado** o perfil, **quando** for exibido, **então** oferece a opção de aparecer com o nome no ranking, desligada por padrão (D-36).
+
+#### RF-19 · Elo e faixas
+*Prioridade: Importante · Regras: RN-13 · Entidades: E-07*
+
+O sistema deve resumir o desempenho recente do aluno num elo e numa faixa (D-33, D-34).
+
+- **Dado** tentativas encerradas, **quando** o elo for calculado, **então** é a média do `pdr_final` das 20 últimas por `fechada_em`, sem os treinos, arredondada meio-para-cima (D-16); desistências entram com 0.
+- **Dado** menos de 20 tentativas encerradas, **quando** o elo for calculado, **então** é a média das que houver; sem nenhuma, o aluno não tem elo nem faixa.
+- **Dado** um elo, **quando** a faixa for exibida, **então** segue Bronze 0–49, Prata 50–99, Ouro 100–149 e Diamante 150–200, cada uma em I, II e III, subindo de I para III.
+- **Dado** um aluno com elo, **quando** qualquer tela logada for exibida, **então** o cabeçalho mostra o selo da faixa.
+- **Dado** uma tentativa recém-encerrada, **quando** a tela de resultado for exibida, **então** mostra o elo antes e depois dela.
+
+#### RF-20 · Ranking
+*Prioridade: Importante · Regras: RN-14 · Entidades: E-01, E-07*
+
+O sistema deve comparar os alunos num ranking semanal e num geral (D-35, D-36, D-37).
+
+- **Dado** o ranking semanal, **quando** for calculado, **então** soma o `pdr_final` das tentativas encerradas desde segunda-feira às 0h, horário de Brasília, e só inclui quem encerrou alguma tentativa na semana.
+- **Dado** o ranking geral, **quando** for calculado, **então** ordena pelo elo e só inclui quem tem elo.
+- **Dado** pontuações iguais, **quando** o ranking for exibido, **então** elas ocupam a mesma posição, em ordem alfabética do nome exibido.
+- **Dado** o perfil, **quando** o ranking for exibido, **então** mostra os 3 primeiros, o próprio aluno e um vizinho acima e outro abaixo, e oferece abrir o ranking completo com todas as posições.
+- **Dado** outro aluno no ranking, **quando** for exibido, **então** aparece como "Nome S." se escolheu aparecer com o nome, ou como "Aluno anônimo"; nunca com e-mail ou identificador.
+- **Dado** o próprio aluno no ranking, **quando** for exibido, **então** a posição dele é destacada, mesmo que esteja anônimo para os outros.
+- **Dado** o cliente consultando o banco, **quando** pedir o ranking, **então** recebe só posição, nome exibido e pontos; as tentativas de outros alunos continuam inacessíveis (RNF-04).
+
 ## 4. Requisitos não funcionais
 
 **RNF-01 · Custo de operação — Obrigatório.** A plataforma deve operar em planos gratuitos, sem custo recorrente de infraestrutura. Admite-se custo variável de chamadas ao modelo, limitado ao feedback final, gerado uma única vez por tentativa.
@@ -256,7 +293,7 @@ Toda ação relevante deve gerar um registro imutável, gravado pelo servidor.
 
 **RNF-03 · Segredo do exercício — Obrigatório.** Quatro informações não podem chegar ao cliente antes do encerramento da tentativa: `suite_oculta`, `codigo_correto`, `linha_defeito` e `categoria_codigo`. Não trafegam em respostas de API, não aparecem no HTML servido, não são embutidas em código do cliente. Os textos de `dicas` só trafegam pelo endpoint, após a condição de liberação ser satisfeita.
 
-**RNF-04 · Isolamento de dados entre alunos — Obrigatório.** Um aluno não pode ler nem alterar tentativas e eventos de outro. A restrição é aplicada por ausência de grant e por Row Level Security no banco, não apenas na aplicação.
+**RNF-04 · Isolamento de dados entre alunos — Obrigatório.** Um aluno não pode ler nem alterar tentativas e eventos de outro. A restrição é aplicada por ausência de grant e por Row Level Security no banco, não apenas na aplicação. A única informação de outros alunos que chega ao cliente é a do ranking (RF-20): posição, nome exibido conforme a escolha de cada um, e pontos agregados.
 
 **RNF-05 · Isolamento na execução de código — Obrigatório.** A execução de código do aluno não pode acessar credenciais, escrever fora de área temporária descartável, nem comprometer a disponibilidade. Ver RF-11.
 
@@ -291,8 +328,11 @@ Toda ação relevante deve gerar um registro imutável, gravado pelo servidor.
 | RF-15 | 7 Feedback | — | E-04, E-05, E-07, E-08 |
 | RF-16 | 7 Feedback | RN-07, RN-11 | E-07 |
 | RF-17 | todas | RN-12 | E-08 |
+| RF-18 | 8 Perfil | RN-13 | E-01, E-03, E-05, E-07 |
+| RF-19 | 7 Feedback, 8 Perfil, cabeçalho | RN-13 | E-07 |
+| RF-20 | 8 Perfil | RN-14 | E-01, E-07 |
 
-Telas: 1 Login · 2 Temas · 3 Nível · 4 Exercício travado · 5 Exercício liberado · 6 Resultado do precheck · 7 Feedback final. As telas 4, 5 e 6 são a mesma rota em estados diferentes.
+Telas: 1 Login · 2 Temas · 3 Nível · 4 Exercício travado · 5 Exercício liberado · 6 Resultado do precheck · 7 Feedback final · 8 Perfil, com o ranking. As telas 4, 5 e 6 são a mesma rota em estados diferentes.
 
 ## 6. Fora de escopo na v1
 
@@ -300,9 +340,7 @@ Registrado para evitar ambiguidade. Nenhum item abaixo deve ser construído, ain
 
 | ITEM | OBSERVAÇÃO |
 |---|---|
-| Elo e janela móvel | telas desenhadas; depende só do PDR, que já existirá |
-| Ranking semanal e geral | idem |
-| Perfil com domínio por categoria | idem; consulta já escrita no Modelo de Dados |
+| No perfil: resumo numérico, ponto fraco e seleção adaptativa | o perfil da v1 mostra domínio por categoria, elo e ranking (D-32) |
 | Sequência de dias consecutivos | não desenhado |
 | Nível Alto e as 5 categorias restantes | pipeline suporta, faltam os mutadores |
 | Temas de POO e Estrutura de Dados | `temas` já existe; faltam os programas-base |

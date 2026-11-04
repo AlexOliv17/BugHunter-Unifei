@@ -177,6 +177,22 @@ O plano da v1 estimava ~65 horas de funcionalidade. As 17 horas adicionais são 
 
 **Critério de saída da S6:** o professor recebe o endereço, cria conta sozinho e resolve um exercício sem nenhuma intervenção.
 
+## 8b. Sprint 7 · Perfil, elo e ranking
+
+**Objetivo:** dar ao aluno uma visão do próprio desempenho e uma comparação com os colegas. **Entregável:** tela de perfil com domínio por categoria, elo, faixa e ranking. Plano detalhado e decisões D-32 a D-37 em [`planos/S7-perfil-elo-ranking.md`](planos/S7-perfil-elo-ranking.md).
+
+| # | ATIVIDADE | REF. | ◆ |
+|---|---|---|---|
+| S7-01 | Requisitos, Documentação e Modelo de Dados com RF-18 a RF-20, RN-13, RN-14 e D-32 a D-37 | — | ◆ validação |
+| S7-02 | Migration com `usuarios.exibir_nome` e as funções de elo, domínio por categoria e rankings, com testes no Postgres real | RF-18 a RF-20 | |
+| S7-03 | `lib/elo.ts`: faixas e divisões como funções puras, com testes nas fronteiras | RF-19 | |
+| S7-04 | Tela `/perfil`: faixa, elo, barra até a próxima divisão e domínio por categoria | RF-18 | |
+| S7-05 | Ranking semanal e geral no perfil, resumo e completo, e a escolha de aparecer com o nome | RF-20 | |
+| S7-06 | Selo da faixa no cabeçalho e elo antes e depois na tela de resultado | RF-19 | |
+| S7-07 | Auditoria do ranking e atualização dos scripts da S6-02 | RNF-03, RNF-04 | ◆ validação |
+
+**Critério de saída da S7:** dois alunos resolvem e desistem de exercícios; cada um vê no perfil o próprio domínio por categoria e o elo batendo com a conta à mão, e no ranking vê o outro só com o nome, se ele tiver escolhido aparecer.
+
 ## 9. Regras de engajamento do executor
 
 ### 9.1 Precedência dos documentos
