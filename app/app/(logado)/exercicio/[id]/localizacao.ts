@@ -16,6 +16,9 @@ const linhaSobCursor = StateField.define<number | null>({
 
 class BotaoApontar extends WidgetType {
   eq() { return true; }
+  // Por padrão o CodeMirror ignora eventos dentro de widgets; sem isto, o clique em
+  // cima de "Apontar esta linha" não chegava ao mousedown abaixo e nada acontecia.
+  ignoreEvent() { return false; }
   toDOM() {
     const b = document.createElement("span");
     b.className = "cm-apontar";
