@@ -23,4 +23,5 @@ aplica as migrations em ordem e apaga tudo ao terminar.
 | `refazer.test.mjs` | `refazer_exercicio`: nova tentativa do mesmo exercício com o número incrementado, reaproveita a aberta, concorrência (RF-16) |
 | `proximo.test.mjs` | `abrir_proximo`: RN-09 no mesmo tema e nível sem o exercício atual, nível de um exercício só, desativados (D-29) |
 | `treino.test.mjs` | `tentativa_e_treino`: repetição de exercício já resolvido fecha com PDR 0; antes de resolver, vale 0,5 (D-31) |
+| `perfil.test.mjs` | elo (20 últimas, sem treino), domínio por categoria, rankings semanal e geral, nome exibido e escolha de visibilidade (RF-18 a RF-20) |
 | `auditoria.test.mjs` | RNF-03: varre o catálogo e confere, para `anon` e `authenticated`, exatamente as tabelas, colunas e funções permitidas; nenhum dos quatro segredos é legível (S3-08) |
